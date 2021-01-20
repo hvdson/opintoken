@@ -1,76 +1,108 @@
 import React, { useState, useEffect } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
+import RiteToken from "./contracts/RiteToken.json";
 import getWeb3 from "./getWeb3";
 
 import "./App.css";
 
-// storageValue: 0, web3: null, accounts: null, contract: null 
-
 function App() {
-  let [storageValue, setStorageValue] = useState(0)
+  // --------------------------------------------- 
+  // setstate for the associated parts
+  // --------------------------------------------- 
+  async function tryCatchInitWeb3Procedure(proc) {
+    try {
+      let [data, identity] = await proc();
+      if (identity === "web3") {
+        setWeb3(data)
+      } else if (identity === "accounts") {
+        setAccounts(data)
+      } else {
+        setContract(data)
+      }
+    } catch (error) {
+      // Catch any errors for any of the above operations.
+      alert(
+        `Failed to load web3, accounts or contract Check console for details.`,
+      );
+      console.error(error);
+    }
+  }
+
+  // --------------------------------------------- 
+  // initialize & modularize every dependency
+  //  - functions should be executed procedurally starting from initWeb3
+  // --------------------------------------------- 
+  async function initWeb3() {
+    const loadWeb3 = await getWeb3();
+    return [loadWeb3, "web3"];
+  }
+
+  // everything below depends on web3 being initialized
+  async function initAccounts() {
+    const loadAccounts = await web3.eth.getAccounts();
+    return [loadAccounts, "accounts"];
+  }
+
+  async function initContract() {
+    const loadNetworkId = await web3.eth.net.getId();
+    const deployedNetwork = RiteToken.networks[loadNetworkId];
+    const instance = new web3.eth.Contract(
+      RiteToken.abi,
+      deployedNetwork && deployedNetwork.address,
+    );
+    return [instance, "contract"]
+  }
+
+  // ------------------------------------------
+  // run all functions in each useEffect
+  // ------------------------------------------
+  // execute and initialize web3 componentDidMount
+
   let [web3, setWeb3] = useState(null)
+  useEffect(() => {
+    (async () => {
+      await tryCatchInitWeb3Procedure(initWeb3);
+    })()
+  }, [])
+
   let [accounts, setAccounts] = useState(null)
+  useEffect(() => {
+    if (web3) {
+      (async () => {
+        await tryCatchInitWeb3Procedure(initAccounts);
+      })()
+    }
+  }, [web3])
+
   let [contract, setContract] = useState(null)
-  let [loaded, setLoaded] = useState(false);
-  
+  useEffect(() => {
+    if (accounts) {
+      (async () => {
+        await tryCatchInitWeb3Procedure(initContract);
+      })()
+    }
+  }, [accounts])
+
+  useEffect(() => {
+    if (contract) {
+      debugger;
+      console.log(contract)
+      runExample()
+    }
+  }, [contract])
+ 
+  let [storageValue, setStorageValue] = useState(0)
   const runExample = async () => {
     // Stores a given value, 5 by default.
     await contract.methods.set(5).send({ from: accounts[0] });
-
     // Get the value from the contract to prove it worked.
     const response = await contract.methods.get().call();
-
-    // Update state with the result.
-    setStorageValue(response);
-  };
-
-
-  useEffect(() =>  {
-    const web3Loader = async () => {
-      try {
-        // Get network provider and web3 instance.
-        const loadWeb3 = await getWeb3();
-
-        // Use web3 to get the user's accounts.
-        const loadAccounts = await loadWeb3.eth.getAccounts();
-        // Get the contract instance.
-        const loadNetworkId = await loadWeb3.eth.net.getId();
-        const deployedNetwork = SimpleStorageContract.networks[loadNetworkId];
-        const instance = new loadWeb3.eth.Contract(
-          SimpleStorageContract.abi,
-          deployedNetwork && deployedNetwork.address,
-        );
-
-        // Set web3, accounts, and contract to the state, and then proceed with an
-        // example of interacting with the contract's methods.
-        // this.setState({ web3, accounts, contract: instance });
-        setWeb3(loadWeb3)
-        setAccounts(loadAccounts)
-        setContract(instance)
-          
-        // console.log(web3, accounts, instance)
-      } catch (error) {
-        // Catch any errors for any of the above operations.
-        alert(
-          `Failed to load web3, accounts, or contract. Check console for details.`,
-        );
-        console.error(error);
-      }
-    }
-    web3Loader().then(()=> {
-      setLoaded(true)
-    })
-  }, [contract])
-
-  useEffect(() => {
-    if (loaded) {
-      runExample();
-    }
-  }, [loaded])
+    setStorageValue(response)
+  }
 
   if (!web3) {
     return <div>Loading Web3, accounts, and contract...</div>;
   }
+
   return (
     <div className="App">
       <h1>Good to Go!</h1>
