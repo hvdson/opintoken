@@ -84,8 +84,6 @@ function App() {
 
   useEffect(() => {
     if (contract) {
-      debugger;
-      console.log(contract)
       runExample()
     }
   }, [contract])
