@@ -7,6 +7,7 @@ function Homepage() {
 
   const handleClick = (e) => {
     history.push("/web3")
+    window.location.reload()
   }
 
   return (

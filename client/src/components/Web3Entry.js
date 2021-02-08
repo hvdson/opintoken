@@ -84,7 +84,7 @@ function Web3Entry() {
 
   useEffect(() => {
     if (contract) {
-      runExample()
+      console.log('Contract loaded!')
     }
   }, [contract])
  
@@ -98,40 +98,38 @@ function Web3Entry() {
   }
 
   if (!web3) {
-    console.log(web3)
     return (
       <div>
         Loading Web3, accounts, and contract...
-        <button onClick={handleReload}>click to reload</button>
       </div>
     );
   }
 
-  function handleReload() {
-    console.log('hi')
-    tryCatchInitWeb3Procedure(initWeb3);
-  }
-
   return (
     <div className="App">
-      <button>
-        <Link to="/">Homepage</Link>
-      </button>
-      <button>
-        Start Web3
+      <Link to="/">
+        <button className="app-button">
+          Homepage
+        </button>
+      </Link>
+      <h1>Ritual Token</h1>
+
+
+      <button onClick={runExample} className="app-button">
+        example send 
       </button>
       
-      <h1>Good to Go!</h1>
-      <p>Your Truffle Box is installed and ready.</p>
-      <h2>Smart Contract Example</h2>
-      <p>
-        If your contracts compiled and migrated successfully, below will show
-        a stored value of 5 (by default).
-      </p>
-      <p>
-        Try changing the value stored on <strong>line 40</strong> of App.js.
-      </p>
-      <div>The stored value is: {storageValue}</div>
+      <div className="container">
+        <div className="cell cell-1">1.</div>
+        <div className="cell cell-2">2.</div>
+        <div className="cell cell-3">3.</div>
+        <div className="cell cell-4">4.</div>
+        <div className="cell cell-5">5.</div>
+        <div className="cell cell-6">6.</div>
+        <div className="cell cell-7">7.</div>
+        <div className="cell cell-8">8.</div>
+        <div className="cell cell-9">9.</div>
+      </div>
     </div>
   );
 }
